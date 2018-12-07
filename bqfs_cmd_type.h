@@ -1,19 +1,11 @@
 
-
 #ifndef __BQFS_CMD_TYPE__
 #define __BQFS_CMD_TYPE__
 
 
-#define CMD_MAX_DATA_SIZE	110
+#define CMD_MAX_DATA_SIZE	32
 #define RETRY_LIMIT		3
 #define CMD_RETRY_DELAY		100 /* in ms */
-
-#ifdef __GNUC__
-#define __PACKED	__attribute__((packed))
-#else
-#error "Make sure structure cmd_t is packed"
-#endif
-
 
 
 typedef unsigned char uint8_t;
@@ -44,7 +36,7 @@ typedef struct {
 	} data;
 	uint8_t  data_len;
 	uint16_t line_num;
-} __PACKED bqfs_cmd_t;
+} bqfs_cmd_t;
 
 
 #endif

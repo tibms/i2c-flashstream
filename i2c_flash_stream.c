@@ -1,17 +1,17 @@
 #include "bqfs_cmd_type.h"
-#include "string.h"
 #include "bq27621G1_sample.gm.fs.h"
 
 
 //for support multiple battery type
 struct fg_batt_profile {
-	const bqfs_cmd_t *bqfs_image;
+	const unsigned char *bqfs_image;
 	uint16_t array_size;
 	uint8_t version;
 };
 
 struct fg_batt_profile bqfs_image_array[] = {
-	{ bqfs_image, ARRAY_SIZE(bqfs_image), 1 },
+	{ bqfs_image, sizeof(bqfs_image), 1 },
+		
 };
 
 
@@ -105,19 +105,40 @@ static bool fg_update_bqfs_execute_cmd(const bqfs_cmd_t *cmd)
 
 void fg_update_bqfs()
 {
-	const bqfs_cmd_t *image;
+	const unsigned char *p;
+	bqfs_cmd_t cmd;
+	int rec_cnt = 0;
+	int len;
 	int i;
 
 	//TODO: check ITPOR to decide if need to do update
+	p = bqfs_image_array[0].bqfs_image;
 	
-	image = bqfs_image_array[0].bqfs_image;
+	while (p < bqfs_image_array[0].bqfs_image + bqfs_image_array[0].array_size) {
+		cmd.cmd_type = *p++;
+		if (cmd.cmd_type == CMD_X) {
+			len = *p++;
+			if (len != 2){
+				return ;//illegal image data
+			}
+			cmd.data.delay = *p << 8 | *(p + 1); //delay field occupy 2 bytes
+			p += 2;
+		} else {
+			cmd.addr = *p++;
+			cmd.reg  = *p++;
+			cmd.data_len = *p++;
+			for (i = 0; i < cmd.data_len; i++)
+				cmd.data.bytes[i] = *p++;
+		}
 
-	for (i = 0; i < bqfs_image_array[0].array_size; i++) {
-		if (!fg_update_bqfs_execute_cmd(&image[i])) {
+		rec_cnt++;
+		if (!fg_update_bqfs_execute_cmd(&cmd)) {
 			PRINT("Failed at command: %d\n", i);
 			return;
 		}
+
 		mdelay(5);
 	}
-	
+	PRINT("Parameter update Successfully\n");
 }
+
