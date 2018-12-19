@@ -133,7 +133,7 @@ void fg_update_bqfs()
 
 		rec_cnt++;
 		if (!fg_update_bqfs_execute_cmd(&cmd)) {
-			PRINT("Failed at command: %d\n", i);
+			PRINT("Failed at command: %d\n", rec_cnt);
 			return;
 		}
 
